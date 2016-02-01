@@ -11,7 +11,23 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20160130175118) do
+ActiveRecord::Schema.define(version: 20160201114508) do
+
+  create_table "events", force: :cascade do |t|
+    t.datetime "date_at"
+    t.datetime "date_to"
+    t.string   "title"
+    t.text     "description"
+    t.datetime "created_at",                null: false
+    t.datetime "updated_at",                null: false
+    t.string   "intropicture_file_name"
+    t.string   "intropicture_content_type"
+    t.integer  "intropicture_file_size"
+    t.datetime "intropicture_updated_at"
+    t.integer  "user_id"
+  end
+
+  add_index "events", ["user_id"], name: "index_events_on_user_id"
 
   create_table "users", force: :cascade do |t|
     t.string   "email",                  default: "", null: false
