@@ -50,6 +50,7 @@ class EventsController < ApplicationController
         format.json { render json: @event.errors, status: :unprocessable_entity }
       end
     end
+    delete_unused_tags
   end
 
   # DELETE /events/1
@@ -60,6 +61,7 @@ class EventsController < ApplicationController
       format.html { redirect_to events_url, notice: 'Event was successfully destroyed.' }
       format.json { head :no_content }
     end
+    delete_unused_tags
   end
 
   private
@@ -70,6 +72,14 @@ class EventsController < ApplicationController
 
     # Never trust parameters from the scary internet, only allow the white list through.
     def event_params
-      params.require(:event).permit(:date_at, :date_to, :title, :description)
+      params.require(:event).permit(:date_at, :date_to, :title, :description, :tags_string)
+    end
+
+    def delete_unused_tags
+      ActiveRecord::Base.connection.execute(
+        "delete from tags where id in(
+          select t.id from tags as t left join events_tags as pt on pt.tag_id = t.id where pt.tag_id is null
+        )"
+      )
     end
 end

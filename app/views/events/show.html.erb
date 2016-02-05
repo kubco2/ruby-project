@@ -25,5 +25,12 @@
   <%= @event.description %>
 </p>
 
+<p>
+  <strong>Tags:</strong>
+  <%= @event.tags_string %>
+</p>
+
+
+
 <%= link_to 'Edit', edit_event_path(@event) %> |
 <%= link_to 'Back', events_path %>
