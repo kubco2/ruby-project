@@ -30,7 +30,10 @@
   <%= @event.tags_string %>
 </p>
 
-
+<p>
+  <strong>Place:</strong>
+  <%= @event.place_string %>
+</p>
 
 <%= link_to 'Edit', edit_event_path(@event) %> |
 <%= link_to 'Back', events_path %>
