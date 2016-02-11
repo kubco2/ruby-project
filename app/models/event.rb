@@ -11,6 +11,7 @@ class Event < ActiveRecord::Base
   has_attached_file :intropicture, styles: { thumb: "100x100>" }, default_url: "/images/:style/missing.png"
   validates_attachment_content_type :intropicture, content_type: /\Aimage\/.*\Z/
   has_many :subscriptions
+  has_many :comments
 
   def tags_string
     tags.map(&:name).join(",")
