@@ -1,34 +1,41 @@
 <p id="notice"><%= notice %></p>
 
 <h1>Listing Events</h1>
-<%= current_user.name %>
 
-<table>
-  <thead>
-    <tr>
-      <th>Date at</th>
-      <th>Date to</th>
-      <th>Title</th>
-      <th>Description</th>
-      <th colspan="3"></th>
-    </tr>
-  </thead>
+<%= form_tag '', :method => :get, class: "form form-inline"  do %>
+  <div class="checkbox">
+    <label>
+      <%= check_box_tag :subscribed, "1", params[:subscribed], class: "form-control" %> Subscribed
+    </label>
+  </div>
+  <div class="checkbox">
+    <label>
+      <%= check_box_tag :upcoming, "1", params[:upcoming], class: "form-control" %> Upcoming
+    </label>
+  </div>
+  <div class="form-group">
+    <%= text_field_tag :tag, params[:tag], class: "form-control", placeholder: "Search by tag" %>
+  </div>
+  <div class="form-group">
+    <%= text_field_tag :place, params[:place], class: "form-control", placeholder: "Search by place" %>
+  </div>
+  <%= submit_tag 'Filter', name: nil, class: "btn btn-default" %>
+<% end %>
 
-  <tbody>
-    <% @events.each do |event| %>
-      <tr>
-        <td><%= event.date_at %></td>
-        <td><%= event.date_to %></td>
-        <td><%= event.title %></td>
-        <td><%= event.description %></td>
-        <td><%= link_to 'Show', event %></td>
+
+<% @events.each do |event| %>
+<div class="media event-box">
+  <div class="media-left">
+    <a href=#" class="pull-left">
+      <%= image_tag event.intropicture.url(:thumb), class: "media-object" %>
+    </a>
+  </div>
+  <div class="media-body">
+    <h4 class="media-heading"><%= event.title %></h4>
+    date
+  </div>
+</div>
         <td><%= link_to 'Edit', edit_event_path(event) %></td>
+        <td><%= link_to 'Show', event %></td>
         <td><%= link_to 'Destroy', event, method: :delete, data: { confirm: 'Are you sure?' } %></td>
-      </tr>
-    <% end %>
-  </tbody>
-</table>
-
-<br>
-
-<%= link_to 'New Event', new_event_path %>
+<% end %>

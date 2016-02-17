@@ -1,4 +1,9 @@
 class Event < ActiveRecord::Base
+  scope :user_id, -> (user) { where user_id: user }
+  scope :upcoming, -> (bool) { where "date_at >= ?", Time.now }
+  scope :tag, -> (name) { joins(:tags).where("tags.name" => name) }
+  scope :place, -> (name) { joins(:place).where("places.name" => name) }
+
   validates :user, presence: true
   validates :date_at, presence: true
   belongs_to :user
@@ -8,7 +13,7 @@ class Event < ActiveRecord::Base
   belongs_to :place
   validates_associated :place
   has_many :pictures
-  has_attached_file :intropicture, styles: { thumb: "100x100>" }, default_url: "/images/:style/missing.png"
+  has_attached_file :intropicture, styles: { thumb: "150x" }, default_url: ":style/events-placeholder.png"
   validates_attachment_content_type :intropicture, content_type: /\Aimage\/.*\Z/
   has_many :subscriptions
   has_many :comments

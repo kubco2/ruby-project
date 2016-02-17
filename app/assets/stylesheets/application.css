@@ -10,6 +10,25 @@
  * defined in the other CSS/SCSS files in this directory. It is generally better to create a new
  * file per style scope.
  *
+ *= require fullcalendar
+ *= require bootstrap
  *= require_tree .
  *= require_self
  */
+
+.profile-box {
+    margin-bottom: 20px;
+}
+.profile-box .media-left > a {
+    margin: 0 15px;
+}
+.event-box .media-left > a {
+    margin: 0 15px;
+}
+.event-box .media-left > a > img {
+    width: 150px;
+}
+
+.fc-basic-view .fc-body .fc-row {
+    min-height: 1px;
+}

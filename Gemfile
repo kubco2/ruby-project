@@ -68,3 +68,9 @@ gem 'devise'
 gem 'cancancan'
 gem 'rolify'
 gem "paperclip", "~> 4.3"
+
+#project
+gem 'momentjs-rails', '~> 2.11'
+gem 'fullcalendar-rails'
+gem 'bootstrap-sass', '~> 3.1.1'
+

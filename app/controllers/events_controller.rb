@@ -2,11 +2,20 @@ class EventsController < ApplicationController
   before_action :authenticate_user!
 
   before_action :set_event, only: [:show, :edit, :update, :destroy]
+  after_action :delete_unused_tags, only: [:update, :destroy]
 
   # GET /events
   # GET /events.json
   def index
-    @events = Event.all
+    @events = Event.where(nil)
+    @events = @events.joins("LEFT JOIN subscriptions ON subscriptions.event_id = events.id")
+      
+    filtering_params(params).each do |key, value|
+      @events = @events.public_send(key, value) if value.present?
+    end
+    @events = @events.where("subscriptions.user_id", current_user.id).where("subscriptions.state = ?", "yes") if params[:subscribed].present?
+    @events = @events.where("subscriptions.user_id", current_user.id).where("subscriptions.state is null") if params[:invitations].present?
+#    @events = @events.joins(:tags).where("tags.name" => params[:tag]) if params[:tag].present?
   end
 
   # GET /events/1
@@ -52,7 +61,6 @@ class EventsController < ApplicationController
         format.json { render json: @event.errors, status: :unprocessable_entity }
       end
     end
-    delete_unused_tags
   end
 
   # DELETE /events/1
@@ -63,7 +71,6 @@ class EventsController < ApplicationController
       format.html { redirect_to events_url, notice: 'Event was successfully destroyed.' }
       format.json { head :no_content }
     end
-    delete_unused_tags
   end
 
   private
@@ -75,6 +82,10 @@ class EventsController < ApplicationController
     # Never trust parameters from the scary internet, only allow the white list through.
     def event_params
       params.require(:event).permit(:date_at, :date_to, :title, :description, :tags_string, :place_string)
+    end
+
+    def filtering_params(params)
+      params.slice(:date_at, :date_to, :title, :tag, :place, :user_id, :upcoming)
     end
 
     def delete_unused_tags
