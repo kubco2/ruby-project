@@ -26,16 +26,39 @@
 <% @events.each do |event| %>
 <div class="media event-box">
   <div class="media-left">
-    <a href=#" class="pull-left">
+    <a href="<%= event_path(:id => event.id) %>" class="pull-left">
       <%= image_tag event.intropicture.url(:thumb), class: "media-object" %>
     </a>
   </div>
   <div class="media-body">
-    <h4 class="media-heading"><%= event.title %></h4>
-    date
+    <h4 class="media-heading"><%= link_to event.title, event %></h4>
+    <span class="pull-right">
+      <div class="btn-group">
+        <% if @subscriptions.has_key?(event.id) && @subscriptions[event.id].state == "yes" %>
+          <span class="btn btn-success">Subscribe</span>
+        <% else %>
+          <% if event.date_to > Time.now %>
+            <%= link_to "Subscribe", events_path + '/subscribe/' + event.id.to_s, class: "btn btn-default" %>
+          <% else %>
+            <span class="btn btn-default disabled">Subscribe</span>
+          <% end %>
+        <% end %>
+        <% if @subscriptions.has_key?(event.id) && @subscriptions[event.id].state == "no" %>
+          <span class="btn btn-danger">Unsubscribe</span>
+        <% else %>
+          <% if event.date_to > Time.now %>
+            <%= link_to "Unsubscribe", events_path + '/unsubscribe/' + event.id.to_s, class: "btn btn-default" %>
+          <% else %>
+            <span class="btn btn-default disabled">Unsubscribe</span>
+          <% end %>
+        <% end %>
+      </div>
+    </span>
+    <%= event.date_at.strftime("%F at %T") %><br />
+    <%= event.place.name %><br />
+    <% if @subscriptions.has_key?(event.id) && @subscriptions[event.id].sender %>
+      <%= @subscriptions[event.id].sender.name %> invited you on this event<br />
+    <% end %>
   </div>
 </div>
-        <td><%= link_to 'Edit', edit_event_path(event) %></td>
-        <td><%= link_to 'Show', event %></td>
-        <td><%= link_to 'Destroy', event, method: :delete, data: { confirm: 'Are you sure?' } %></td>
 <% end %>

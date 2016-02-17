@@ -1,12 +1,14 @@
 class EventsController < ApplicationController
   before_action :authenticate_user!
 
-  before_action :set_event, only: [:show, :edit, :update, :destroy]
+  before_action :set_event, only: [:show, :edit, :update, :destroy, :subscribe, :unsubscribe]
+  before_action :redirect_not_owned, only: [:edit, :update, :destroy]
   after_action :delete_unused_tags, only: [:update, :destroy]
 
   # GET /events
   # GET /events.json
   def index
+    @subscriptions = Subscription.joins(:event).where("subscriptions.user_id", current_user).index_by{ |s| s.event.id }
     @events = Event.where(nil)
     @events = @events.joins("LEFT JOIN subscriptions ON subscriptions.event_id = events.id")
       
@@ -66,14 +68,46 @@ class EventsController < ApplicationController
   # DELETE /events/1
   # DELETE /events/1.json
   def destroy
+    redirect_to events_path + "dsad"
+    return 
     @event.destroy
     respond_to do |format|
       format.html { redirect_to events_url, notice: 'Event was successfully destroyed.' }
       format.json { head :no_content }
     end
   end
+  
+  def subscribe
+    redirect_to @event, alert: 'It is too late.' and return if @event.date_to <= Time.now
+    subscription = Subscription.where(:event => @event, :user => current_user).first
+    if subscription.nil?
+      subscription = Subscription.new(:event => @event, :state => "yes", :user => current_user)
+    else
+      subscription.update(:state => "yes")
+    end
+    if subscription.save
+      redirect_to @event, notice: 'Successfully subscribed to this event.' 
+    else
+      redirect_to @event, alert: 'Cannot subscribe to this event.'
+    end
+  end
 
-  private
+  def unsubscribe
+    redirect_to @event, alert: 'It is too late.' and return if @event.date_to <= Time.now
+    subscription = Subscription.where(:event => @event, :user => current_user).first
+    if subscription.nil?
+      subscription = Subscription.new(:event => @event, :state => "no", :user => current_user)
+    else
+      subscription.update(:state => "no")
+    end
+    if subscription.save
+      redirect_to @event, notice: 'Successfully unsubscribed from this event.' 
+    else
+      redirect_to @event, alert: 'Cannot unsubscribe from this event.'
+    end
+  end
+
+    private
     # Use callbacks to share common setup or constraints between actions.
     def set_event
       @event = Event.find(params[:id])
@@ -86,6 +120,10 @@ class EventsController < ApplicationController
 
     def filtering_params(params)
       params.slice(:date_at, :date_to, :title, :tag, :place, :user_id, :upcoming)
+    end
+
+    def redirect_not_owned
+      redirect_to @event, alert: "Only owner can edit or delete event." if @event.user != current_user
     end
 
     def delete_unused_tags

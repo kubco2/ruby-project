@@ -4,7 +4,12 @@ Rails.application.routes.draw do
   # resources :pictures
   # resources :places
   # resources :tags
-  resources :events
+  resources :events do
+    collection do
+      get 'subscribe/:id' => 'events#subscribe'
+      get 'unsubscribe/:id' => 'events#unsubscribe'
+    end
+  end
   devise_for :users
   # The priority is based upon order of creation: first created -> highest priority.
   # See how all your routes lay out with "rake routes".

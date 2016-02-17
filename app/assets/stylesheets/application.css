@@ -32,3 +32,7 @@
 .fc-basic-view .fc-body .fc-row {
     min-height: 1px;
 }
+
+body {
+    margin-bottom: 20px
+}
