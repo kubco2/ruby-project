@@ -37,7 +37,7 @@
     <div class="col-sm-3">
       <div class="media profile-box">
         <div class="media-left">
-          <a class="pull-left">
+          <a class="pull-left margin-15">
             <%= image_tag current_user.avatar.url(:thumb), class: "media-object img-circle" %>
           </a>
         </div>
@@ -48,7 +48,7 @@
       </div>
       <ul class="list-group">
         <a href="<%= events_path(:invitations => 1, :upcoming => 1) %>" class="list-group-item">
-          <span class="badge"><%= Event.joins(:subscriptions).where("events.date_at >= ?", Time.now).where("subscriptions.user_id", current_user.id).where("subscriptions.state is null").count %></span>
+          <span class="badge"><%= Event.joins(:subscriptions).where("events.date_at >= ?", Time.now).where("subscriptions.user_id": current_user.id).where("subscriptions.state = ?", "request").count %></span>
           Invitations
         </a>
         <a href="<%= events_path(:subscribed => 1, :upcoming => 1) %>" class="list-group-item">
@@ -62,14 +62,14 @@
       </ul>
       <div>
 				<div id="calendar"></div>
-				<script>
+				<!--script>
       	  $(document).ready(function() {
     				$('#calendar').fullCalendar({
                 firstDay: 1
        			 // put your options and callbacks here
 			    	})
 					});
-				</script>
+				</script-->
       </div>
     </div>
     

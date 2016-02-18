@@ -8,6 +8,10 @@ Rails.application.routes.draw do
     collection do
       get 'subscribe/:id' => 'events#subscribe'
       get 'unsubscribe/:id' => 'events#unsubscribe'
+      delete 'picture_del/:picture' => 'events#picture_del'
+      delete 'comment_del/:comment' => 'events#comment_del'
+      post 'comment_add' => 'events#comment_add'
+      post ':id/invite' => 'events#invite'
     end
   end
   devise_for :users

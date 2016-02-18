@@ -1,14 +1,14 @@
 class EventsController < ApplicationController
   before_action :authenticate_user!
 
-  before_action :set_event, only: [:show, :edit, :update, :destroy, :subscribe, :unsubscribe]
+  before_action :set_event, only: [:show, :edit, :update, :destroy, :subscribe, :unsubscribe, :invite]
   before_action :redirect_not_owned, only: [:edit, :update, :destroy]
   after_action :delete_unused_tags, only: [:update, :destroy]
 
   # GET /events
   # GET /events.json
   def index
-    @subscriptions = Subscription.joins(:event).where("subscriptions.user_id", current_user).index_by{ |s| s.event.id }
+    @subscriptions = Subscription.joins(:event).where("subscriptions.user_id": current_user).index_by{ |s| s.event.id }
     @events = Event.where(nil)
     @events = @events.joins("LEFT JOIN subscriptions ON subscriptions.event_id = events.id")
       
@@ -16,13 +16,19 @@ class EventsController < ApplicationController
       @events = @events.public_send(key, value) if value.present?
     end
     @events = @events.where("subscriptions.user_id", current_user.id).where("subscriptions.state = ?", "yes") if params[:subscribed].present?
-    @events = @events.where("subscriptions.user_id", current_user.id).where("subscriptions.state is null") if params[:invitations].present?
+    @events = @events.where("subscriptions.user_id", current_user.id).where("subscriptions.state = ?", "request") if params[:invitations].present?
 #    @events = @events.joins(:tags).where("tags.name" => params[:tag]) if params[:tag].present?
   end
 
   # GET /events/1
   # GET /events/1.json
   def show
+    @subscription = Subscription.where(user_id: current_user.id).where(event_id: @event.id).first
+    @subscriptions = Subscription.where(event_id: @event.id)
+    @comments = Comment.where(event_id: @event.id)
+    @pictures = Picture.where(event_id: @event.id)
+    ids = @subscriptions.map { |s| s.user.id }
+    @invite_users = User.where("id not in(?)", ids)
   end
 
   # GET /events/new
@@ -56,6 +62,7 @@ class EventsController < ApplicationController
   def update
     respond_to do |format|
       if @event.update(event_params)
+        upload_images 
         format.html { redirect_to @event, notice: 'Event was successfully updated.' }
         format.json { render :show, status: :ok, location: @event }
       else
@@ -68,8 +75,6 @@ class EventsController < ApplicationController
   # DELETE /events/1
   # DELETE /events/1.json
   def destroy
-    redirect_to events_path + "dsad"
-    return 
     @event.destroy
     respond_to do |format|
       format.html { redirect_to events_url, notice: 'Event was successfully destroyed.' }
@@ -107,6 +112,37 @@ class EventsController < ApplicationController
     end
   end
 
+  def invite
+    redirect_to @event, alert: 'It is too late.' and return if @event.date_to <= Time.now
+    params["people"].each do |value|
+      Subscription.new(:event => @event, :sender_id => current_user.id, :user_id => value.to_i, :state => "request").save
+    end
+    redirect_to @event, notice: 'Invitations sent.'
+
+  end
+
+  def picture_del
+    @picture = Picture.find(params[:picture])
+    event = @picture.event
+    redirect_to event_path(:id => event.id), alert: 'Only owner can delete pictures' and return if event.user != current_user
+    @picture.destroy
+    redirect_to edit_event_path(:id => event.id), notice: 'Successfully deleted picture'
+  end
+
+  def comment_del
+    @comment = Comment.find(params[:comment])
+    event = @comment.event
+    redirect_to event_path(:id => event.id), alert: 'Only owner can delete comments' and return if event.user != current_user
+    @comment.destroy
+    redirect_to event_path(:id => event.id), notice: 'Successfully deleted comment'
+  end
+
+  def comment_add
+    @comment = Comment.create(:user => current_user, :event_id => params[:event_id], :body => params[:body])
+    @comment.save
+    redirect_to event_path(:id => params[:event_id]), notice: 'Comment successfully added'
+  end
+
     private
     # Use callbacks to share common setup or constraints between actions.
     def set_event
@@ -124,6 +160,12 @@ class EventsController < ApplicationController
 
     def redirect_not_owned
       redirect_to @event, alert: "Only owner can edit or delete event." if @event.user != current_user
+    end
+
+    def upload_images
+      params.slice(:file1, :file2, :file3, :file4, :file5, :file6, :file7, :file8, :file9, :file10).each { |key, file|
+        Picture.create(img: file, event: @event).save
+      }
     end
 
     def delete_unused_tags

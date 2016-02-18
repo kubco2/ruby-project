@@ -73,4 +73,5 @@ gem "paperclip", "~> 4.3"
 gem 'momentjs-rails', '~> 2.11'
 gem 'fullcalendar-rails'
 gem 'bootstrap-sass', '~> 3.1.1'
-
+gem 'lightbox2-rails'
+gem 'bootstrap-multiselect-rails'

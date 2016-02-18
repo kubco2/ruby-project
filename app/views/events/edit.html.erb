@@ -3,5 +3,11 @@
 <%= render 'form' %>
 
 <%= link_to 'Show', @event %> |
-<%= link_to 'Back', events_path %>
+<%= link_to 'Back', events_path %> |
 <%= link_to 'Destroy', @event, method: :delete, data: { confirm: 'Are you sure?' } %>
+<div class="gallery">
+<% @event.pictures.each do |picture| %>
+  <%= image_tag picture.img.url(:thumb) %> 
+  <%= link_to 'Destroy', events_path + '/picture_del/' + picture.id.to_s, method: :delete, data: { confirm: 'Are you sure?' } %>
+<% end %>
+</div>

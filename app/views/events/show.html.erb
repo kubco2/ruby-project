@@ -1,39 +1,149 @@
-<p id="notice"><%= notice %></p>
+<h2><%= @event.title %>
+<% if @event.user == current_user %>
+   <small> - <%= link_to 'Edit', edit_event_path(@event) %></small>
+<% end %>
+</h2>
 
-<p>
+<div class="list-group">
+
+  <div class="list-group-item">
+
+      <% if @subscription && @subscription.sender %>
+        <%= @subscription.sender.name %> invited you on this event<br />
+      <% end %>
+      <div class="btn-group">
+        <% if @subscription && @subscription.state == "yes" %>
+          <span class="btn btn-success">Subscribe</span>
+        <% else %>
+          <% if @event.date_to > Time.now %>
+            <%= link_to "Subscribe", events_path + '/subscribe/' + @event.id.to_s, class: "btn btn-default" %>
+          <% else %>
+            <span class="btn btn-default disabled">Subscribe</span>
+          <% end %>
+        <% end %>
+        <% if @subscription && @subscription.state == "no" %>
+          <span class="btn btn-danger">Unsubscribe</span>
+        <% else %>
+          <% if @event.date_to > Time.now %>
+            <%= link_to "Unsubscribe", events_path + '/unsubscribe/' + @event.id.to_s, class: "btn btn-default" %>
+          <% else %>
+            <span class="btn btn-default disabled">Unsubscribe</span>
+          <% end %>
+        <% end %>
+      </div>
+  </div>
+
+<p class="list-group-item">
+<%= @event.date_at.strftime("%F at %T") %> <% if @event.date_to %> - <%= @event.date_to.strftime("%F at %T") %><% end %>
+</p>
+
+<p class="list-group-item">
+  <%= @event.place_string %>
+</p>
+
+<p class="list-group-item">
   <strong>Organizator:</strong>
   <%= @event.user.name %>
 </p>
 
-<p>
-  <strong>Date at:</strong>
-  <%= @event.date_at %>
-</p>
-
-<p>
-  <strong>Date to:</strong>
-  <%= @event.date_to %>
-</p>
-
-<p>
-  <strong>Title:</strong>
-  <%= @event.title %>
-</p>
-
-<p>
-  <strong>Description:</strong>
-  <%= @event.description %>
-</p>
-
-<p>
+<p class="list-group-item">
   <strong>Tags:</strong>
   <%= @event.tags_string %>
 </p>
 
-<p>
-  <strong>Place:</strong>
-  <%= @event.place_string %>
-</p>
+</div>
 
-<%= link_to 'Edit', edit_event_path(@event) %> |
-<%= link_to 'Back', events_path %>
+<div class="well">
+  <h4>Description</h4>
+  <%= @event.description %>
+</div>
+
+<div class="row">
+  <div class="col-sm-8">
+  <!-- Nav tabs -->
+  <ul class="nav nav-tabs" role="tablist">
+    <li role="presentation" class="active"><a href="#comments" aria-controls="comments" role="tab" data-toggle="tab">Comments</a></li>
+    <li role="presentation"><a href="#gallery" aria-controls="gallery" role="tab" data-toggle="tab">Gallery</a></li>
+    <% if @event.date_to > Time.now %><li role="presentation"><a href="#invite" aria-controls="invite" role="tab" data-toggle="tab" class="btn btn-primary">Invite people</a></li><% end %>
+  </ul>
+
+  <!-- Tab panes -->
+  <div class="tab-content">
+    <div role="tabpanel" class="tab-pane active" id="comments">
+      <% @comments.each do |comment| %>
+        <div class="media">
+          <div class="media-left">
+            <a class="pull-left margin-15"><%= image_tag comment.user.avatar.url(:thumb), class: "img-circle" %></a><%= comment.user.name %>
+          <br /> <%= comment.created_at.strftime("%F at %T") %>
+          </div>
+          <div class="media-body">
+            <% if @event.user == current_user %>
+              <%= link_to 'Destroy', events_path + '/comment_del/' + comment.id.to_s, method: :delete, data: { confirm: 'Are you sure?' }, class: "pull-right" %>
+            <% end %>
+            <%= comment.body %>
+          </div>
+        </div>
+      <% end %>
+      <div class="media">
+        <div class="media-left">
+          <a class="pull-left margin-15"><%= image_tag current_user.avatar.url(:thumb), class: "img-circle" %></a><%= current_user.name %>
+        </div>
+        <div class="media-body">
+          <%= form_tag events_path + '/comment_add'  do %>
+            <%= hidden_field_tag :event_id, @event.id %>
+            <%= text_area_tag :body %><br />
+            <%= submit_tag "Comment" %>
+          <% end %>
+        </div>
+      </div>
+		</div>
+    <div role="tabpanel" class="tab-pane" id="gallery">
+      <% @pictures.each do |picture| %>
+        <a href="<%= picture.img.url %>" data-lightbox="gallery" ><%= image_tag picture.img.url(:thumb), class: "thumb" %></a>
+      <% end %>
+    </div>
+    <% if @event.date_to > Time.now %>
+    <div role="tabpanel" class="tab-pane" id="invite">
+      <%= form_tag event_path(:id => @event.id) + "/invite" do %>
+        <% hidden_field_tag :id, @event.id %>
+        <select class="multiselect" multiple="multiple" name="people[]">
+          <% @invite_users.each do |user| %>
+            <option value="<%= user.id %>"><%= user.name %></option>
+          <% end %>
+        </select>
+        <%= submit_tag "Invite", class: "btn btn-primary" %>
+      <% end %>
+      <script type="text/javascript">
+        $(document).ready(function() {
+          $('.multiselect').multiselect();
+        });
+      </script>
+    </div>
+    <% end %>
+  </div>
+  </div>
+  <div class="col-sm-4 invitations">
+    <h3>Subscribed</h3>
+    <% @subscriptions.each do |s| %>
+      <% if s.state == "yes" %>
+      <div>
+      <a class="margin-15"><%= image_tag s.user.avatar.url(:thumb), class: "img-circle" %></a>
+      <span class="btn btn-success"><%= s.user.name %></span>
+      </div>
+      <% end %>
+    <% end %>
+    <h3>Invited</h3>
+    <% @subscriptions.each do |s| %>
+      <% if s.state != "yes" %>
+      <div>
+      <a class="margin-15"><%= image_tag s.user.avatar.url(:thumb), class: "img-circle" %></a>
+      <% if s.state == "no" %>
+        <span class="btn btn-danger"><%= s.user.name %></span>
+      <% else %>
+        <%= s.user.name %>
+      <% end %>
+      </div>
+      <% end %>
+    <% end %>
+  </div>
+</div>
