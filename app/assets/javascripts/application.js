@@ -17,3 +17,5 @@
 //= require bootstrap-multiselect
 //= require lightbox
 //= require_tree .
+//
+ $.mobile.ajaxEnabled = false;

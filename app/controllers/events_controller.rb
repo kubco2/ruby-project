@@ -8,16 +8,16 @@ class EventsController < ApplicationController
   # GET /events
   # GET /events.json
   def index
-    @subscriptions = Subscription.joins(:event).where("subscriptions.user_id": current_user).index_by{ |s| s.event.id }
+    @subscriptions = Subscription.joins(:event).where("subscriptions.user_id": current_user.id).index_by{ |s| s.event.id }
     @events = Event.where(nil)
     @events = @events.joins("LEFT JOIN subscriptions ON subscriptions.event_id = events.id")
       
     filtering_params(params).each do |key, value|
       @events = @events.public_send(key, value) if value.present?
     end
-    @events = @events.where("subscriptions.user_id", current_user.id).where("subscriptions.state = ?", "yes") if params[:subscribed].present?
-    @events = @events.where("subscriptions.user_id", current_user.id).where("subscriptions.state = ?", "request") if params[:invitations].present?
-#    @events = @events.joins(:tags).where("tags.name" => params[:tag]) if params[:tag].present?
+    @events = @events.where("subscriptions.user_id": current_user.id).where("subscriptions.state = ?", "yes") if params[:subscribed].present?
+    @events = @events.where("subscriptions.user_id": current_user.id).where("subscriptions.state = ?", "request") if params[:invitations].present?
+    @events = @events.distinct
   end
 
   # GET /events/1
@@ -48,6 +48,7 @@ class EventsController < ApplicationController
 
     respond_to do |format|
       if @event.save
+        Subscription.create(:event_id => @event.id, :user_id => current_user.id, :state => "yes").save
         format.html { redirect_to @event, notice: 'Event was successfully created.' }
         format.json { render :show, status: :created, location: @event }
       else

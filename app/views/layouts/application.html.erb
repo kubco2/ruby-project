@@ -48,11 +48,11 @@
       </div>
       <ul class="list-group">
         <a href="<%= events_path(:invitations => 1, :upcoming => 1) %>" class="list-group-item">
-          <span class="badge"><%= Event.joins(:subscriptions).where("events.date_at >= ?", Time.now).where("subscriptions.user_id": current_user.id).where("subscriptions.state = ?", "request").count %></span>
+          <span class="badge"><%= Event.joins(:subscriptions).where("events.date_at >= ?", Time.now).where("subscriptions.user_id = ?", current_user.id).where("subscriptions.state = ?", "request").count %></span>
           Invitations
         </a>
         <a href="<%= events_path(:subscribed => 1, :upcoming => 1) %>" class="list-group-item">
-          <span class="badge"><%= Event.joins(:subscriptions).where("events.date_at >= ?", Time.now).where("subscriptions.user_id", current_user.id).where("subscriptions.state = ?", "yes").count %></span>
+          <span class="badge"><%= Event.joins(:subscriptions).where("events.date_at >= ?", Time.now).where("subscriptions.user_id = ?", current_user.id).where("subscriptions.state = ?", "yes").count %></span>
           Upcoming events
         </a>
         <a href="<%= events_path(:user_id => current_user.id, :upcoming => 1) %>" class="list-group-item">
