@@ -8,25 +8,26 @@ class EventsController < ApplicationController
   # GET /events
   # GET /events.json
   def index
-    @subscriptions = Subscription.joins(:event).where("subscriptions.user_id": current_user.id).index_by{ |s| s.event.id }
-    @events = Event.where(nil)
+    @subscriptions = Subscription.joins(:event).where("subscriptions.user_id = ?", current_user.id).index_by{ |s| s.event.id }
+    @events = Event.order(:date_at).order(:id).where(nil)
+
     @events = @events.joins("LEFT JOIN subscriptions ON subscriptions.event_id = events.id")
       
     filtering_params(params).each do |key, value|
       @events = @events.public_send(key, value) if value.present?
     end
-    @events = @events.where("subscriptions.user_id": current_user.id).where("subscriptions.state = ?", "yes") if params[:subscribed].present?
-    @events = @events.where("subscriptions.user_id": current_user.id).where("subscriptions.state = ?", "request") if params[:invitations].present?
+    @events = @events.where("subscriptions.user_id = ?", current_user.id).where("subscriptions.state = ?", "yes") if params[:subscribed].present?
+    @events = @events.where("subscriptions.user_id = ?", current_user.id).where("subscriptions.state = ?", "request") if params[:invitations].present?
     @events = @events.distinct
   end
 
   # GET /events/1
   # GET /events/1.json
   def show
-    @subscription = Subscription.where(user_id: current_user.id).where(event_id: @event.id).first
-    @subscriptions = Subscription.where(event_id: @event.id)
-    @comments = Comment.where(event_id: @event.id)
-    @pictures = Picture.where(event_id: @event.id)
+    @subscription = Subscription.where("user_id = ?", current_user.id).where("event_id = ?", @event.id).first
+    @subscriptions = Subscription.where("event_id = ?", @event.id)
+    @comments = Comment.where("event_id = ?", @event.id)
+    @pictures = Picture.where("event_id = ?", @event.id)
     ids = @subscriptions.map { |s| s.user.id }
     @invite_users = User.where("id not in(?)", ids)
   end
@@ -85,9 +86,9 @@ class EventsController < ApplicationController
   
   def subscribe
     redirect_to @event, alert: 'It is too late.' and return if @event.date_to <= Time.now
-    subscription = Subscription.where(:event => @event, :user => current_user).first
+    subscription = Subscription.where("event_id = ?", @event.id).where("user_id = ?", current_user.id).first
     if subscription.nil?
-      subscription = Subscription.new(:event => @event, :state => "yes", :user => current_user)
+      subscription = Subscription.new("event_id = ?", @event.id).where("state = ?", "yes").where("user_id = ?", current_user.id)
     else
       subscription.update(:state => "yes")
     end
@@ -100,7 +101,7 @@ class EventsController < ApplicationController
 
   def unsubscribe
     redirect_to @event, alert: 'It is too late.' and return if @event.date_to <= Time.now
-    subscription = Subscription.where(:event => @event, :user => current_user).first
+    subscription = Subscription.where("event_id = ?", @event.id).where("user_id = ?", current_user.id).first
     if subscription.nil?
       subscription = Subscription.new(:event => @event, :state => "no", :user => current_user)
     else

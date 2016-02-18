@@ -53,7 +53,8 @@ body {
 }
 
 a:hover {
-    background-color: transparent
+    color: inherit;
+    background-color: transparent;
 }
 
 .invitations > div {
